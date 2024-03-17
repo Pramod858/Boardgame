@@ -1,6 +1,8 @@
 # BoardgameListingWebApp
 
 ## Description
+![Screenshot (15)](https://github.com/Pramod858/Boardgame/assets/80105491/eb3b3dd5-0035-4fe3-b7c9-b99bda8a2ed4)
+![Screenshot (14)](https://github.com/Pramod858/Boardgame/assets/80105491/88efb2b1-1d5d-4e01-a05b-5a23a86a29d3)
 
 **Board Game Database Full-Stack Web Application.**
 This web application displays lists of board games and their reviews. While anyone can view the board game lists and reviews, they are required to log in to add/ edit the board games and their reviews. The 'users' have the authority to add board games to the list and add reviews, and the 'managers' have the authority to edit/ delete the reviews on top of the authorities of users.  
