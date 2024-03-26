@@ -69,7 +69,7 @@ pipeline {
             steps {
                 script {
                     withDockerRegistry(credentialsId: 'docker-cred', toolName: 'docker') {
-                    sh "docker build -t pramod858/boardshack:${BUILD_NUMBER} ."
+                    sh "docker build -t pramod858/boardshack:v${BUILD_NUMBER} ."
                     }
                 }
             }
@@ -77,7 +77,7 @@ pipeline {
         
         stage('Docker Image Scan') {
             steps {
-                sh "trivy image --format table -o trivy-image-report.html pramod858/boardshack:${BUILD_NUMBER} "
+                sh "trivy image --format table -o trivy-image-report.html pramod858/boardshack:v${BUILD_NUMBER} "
             }
         }
         
@@ -85,7 +85,7 @@ pipeline {
             steps {
                 script {
                     withDockerRegistry(credentialsId: 'docker-cred', toolName: 'docker') {
-                    sh "docker push pramod858/boardshack:${BUILD_NUMBER}"
+                    sh "docker push pramod858/boardshack:v${BUILD_NUMBER}"
                     }
                 }
             }
@@ -99,11 +99,11 @@ pipeline {
                         sh "git config user.email pramodbadiger45@gmail.com"
                         sh "git config user.name Pramod858"
                         //sh "git switch master"
-                        sh "cat deployment-service.yaml"
-                        sh "sed -i 's+pramod858/boardshack.*+pramod858/boardshack:${BUILD_NUMBER}+g' deployment-service.yaml"
-                        sh "cat deployment-service.yaml"
-                        sh "git add deployment-service.yaml"
-                        sh "git commit -m 'Done by Jenkins Job changemanifest: ${env.BUILD_NUMBER}'"
+                        sh "cat K8s-manifest/deployment-service.yaml"
+                        sh "sed -i 's+pramod858/boardshack.*+pramod858/boardshack:v${BUILD_NUMBER}+g' K8s-manifest/deployment-service.yaml"
+                        sh "cat K8s-manifest/deployment-service.yaml"
+                        sh "git add K8s-manifest/deployment-service.yaml"
+                        sh "git commit -m 'Done by Jenkins Job changemanifest:v${env.BUILD_NUMBER}'"
                         sh "git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/${GIT_USERNAME}/Boardgame.git HEAD:main"
                     }
                 }
