@@ -1,36 +1,147 @@
-apiVersion: apps/v1
-kind: Deployment # Kubernetes resource kind we are creating
-metadata:
-  name: boardgame-deployment
-spec:
-  selector:
-    matchLabels:
-      app: boardgame
-  replicas: 2 # Number of replicas that will be created for this deployment
-  template:
-    metadata:
-      labels:
-        app: boardgame
-    spec:
-      containers:
-        - name: boardgame
-          image: pramod858/boardshack:8
-          imagePullPolicy: Always
-          ports:
-            - containerPort: 8080 # The port that the container is running on in the cluster
+pipeline {
+    agent any
+    tools {
+        jdk 'jdk17'
+        maven 'maven3'
+    }
+    environment {
+        SCANNER_HOME = tool 'SonarScanner'
+    }
+    stages {
+        stage('Git Checkout') {
+            steps {
+                git branch: 'main', credentialsId: 'git-cred', url: 'https://github.com/Pramod858/Boardgame.git'
+            }
+        }
+        
+        stage('Compile') {
+            steps {
+                sh "mvn compile"
+            }
+        }
+        
+        stage('Test') {
+            steps {
+                sh "mvn test"
+            }
+        }
+        
+        stage('File System Scan') {
+            steps {
+                sh "trivy fs --format table -o trivy-fs-report.html ."
+            }
+        }
+        
+        stage('SonarQube Analsyis') {
+            steps {
+                withSonarQubeEnv('SonarServer') {
+                    sh ''' $SCANNER_HOME/bin/sonar-scanner \
+                    -Dsonar.projectName=BoardGame -Dsonar.projectKey=BoardGame \
+                    -Dsonar.java.binaries=. '''
+                }
+            }
+        }
+        
+        stage('Quality Gate') {
+            steps {
+                script {
+                    waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token'
+                }
+            }
+        }
+        
+        stage('Build') {
+            steps {
+                sh "mvn package"
+            }
+        }
+        
+        stage('Publish To Nexus') {
+            steps {
+                withMaven(globalMavenSettingsConfig: 'global-settings', jdk: 'jdk17',
+                maven: 'maven3', mavenSettingsConfig: '', traceability: true) {
+                    sh "mvn deploy"
+                }
+            }
+        }
+        
+        stage('Build & Tag Docker Image') {
+            steps {
+                script {
+                    withDockerRegistry(credentialsId: 'docker-cred', toolName: 'docker') {
+                    sh "docker build -t pramod858/boardshack:${BUILD_NUMBER} ."
+                    }
+                }
+            }
+        }
+        
+        stage('Docker Image Scan') {
+            steps {
+                sh "trivy image --format table -o trivy-image-report.html pramod858/boardshack:${BUILD_NUMBER} "
+            }
+        }
+        
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    withDockerRegistry(credentialsId: 'docker-cred', toolName: 'docker') {
+                    sh "docker push pramod858/boardshack:${BUILD_NUMBER}"
+                    }
+                }
+            }
+        }
+        
+        stage('Update GIT') {
+            steps{
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    withCredentials([usernamePassword(credentialsId: 'git-cred', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                        //def encodedPassword = URLEncoder.encode("$GIT_PASSWORD",'UTF-8')
+                        sh "git config user.email pramodbadiger45@gmail.com"
+                        sh "git config user.name Pramod858"
+                        //sh "git switch master"
+                        sh "cat K8s-manifest/deployment-service.yaml"
+                        sh "sed -i 's+pramod858/boardshack.*+pramod858/boardshack:${BUILD_NUMBER}+g' K8s-manifest/deployment-service.yaml"
+                        sh "cat K8s-manifest/deployment-service.yaml"
+                        sh "git add K8s-manifest/deployment-service.yaml"
+                        sh "git commit -m 'Done by Jenkins Job changemanifest: ${env.BUILD_NUMBER}'"
+                        sh "git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/${GIT_USERNAME}/Boardgame.git HEAD:main"
+                    }
+                }
+            }
+        }
+    }
+    post {
+    always {
+        script {
+            def jobName = env.JOB_NAME
+            def buildNumber = env.BUILD_NUMBER
+            def pipelineStatus = currentBuild.result ?: 'UNKNOWN'
+            def bannerColor = pipelineStatus.toUpperCase() == 'SUCCESS' ? 'green' : 'red'
 
-
----
-
-apiVersion: v1 # Kubernetes API version
-kind: Service # Kubernetes resource kind we are creating
-metadata: # Metadata of the resource kind we are creating
-  name: boardgame-ssvc
-spec:
-  selector:
-    app: boardgame
-  ports:
-    - protocol: "TCP"
-      port: 8080 # The port that the service is running on in the cluster
-      targetPort: 8080 # The port exposed by the service
-  type: LoadBalancer # type of the service.
+            def body = """
+                <html>
+                <body>
+                <div style="border: 4px solid ${bannerColor}; padding: 10px;">
+                <h2>${jobName} - Build ${buildNumber}</h2>
+                <div style="background-color: ${bannerColor}; padding: 10px;">
+                <h3 style="color: white;">Pipeline Status:${pipelineStatus.toUpperCase()}</h3>
+                </div>
+                <p>Check the <a href="${BUILD_URL}">console output</a>.</p>
+                </div>
+                </body>
+                </html>
+            """
+            emailext (
+                subject: "${jobName} - Build ${buildNumber} - ${pipelineStatus.toUpperCase()}",
+                body: body,
+                to: 'pramod.c.b.2001@gmail.com',
+                from: 'jenkins@example.com',
+                replyTo: 'jenkins@example.com',
+                mimeType: 'text/html',
+                attachmentsPattern: 'trivy-image-report.html'
+            )
+        }
+    }
+}
+    
+}
