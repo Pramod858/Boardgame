@@ -16,11 +16,10 @@ spec:
     spec:
       containers:
       - name: boardgame
-        ## image: pramod858/boardshack:v6
-        image: pramod858/netflix:v14
+        image: pramod858/boardshack:v6
         imagePullPolicy: Always
         ports:
-        - containerPort: 80
+        - containerPort: 8080
           name: http
           protocol: TCP
 # service type loadbalancer       
@@ -37,7 +36,7 @@ spec:
   - name: http
     port: 80
     protocol: TCP
-    targetPort: 80
+    targetPort: 8080
   type: LoadBalancer
   selector:
     app: boardgame
