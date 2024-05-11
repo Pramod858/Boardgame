@@ -16,7 +16,8 @@ spec:
     spec:
       containers:
       - name: boardgame
-        image: pramod858/boardshack:v6
+        ## image: pramod858/boardshack:v6
+        image: pramod858/netflix:v14
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
