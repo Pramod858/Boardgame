@@ -115,4 +115,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/Git-action-Boardgame:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/git-action-boardgame:latest
