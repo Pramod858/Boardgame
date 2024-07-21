@@ -42,7 +42,8 @@ jobs:
         uses: actions/upload-artifact@master
         with:
           name: Depcheck report
-          path: ${{github.workspace}}/reports
+          # path: ${{github.workspace}}/reports
+          path: ../reports
           overwrite: true
       # - name: Run Trivy vulnerability scanner in repo mode
       #   uses: aquasecurity/trivy-action@0.20.0
