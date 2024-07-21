@@ -67,20 +67,37 @@ jobs:
           scan-type: 'fs'
           ignore-unfixed: true
           format: 'table'
-          output: 'trivy-results.html'
+          output: 'trivy-fs-results.html'
           severity: 'CRITICAL'
 
       - name: Upload Trivy Results
         uses: actions/upload-artifact@v3
         with:
-          name: Trivy-results
-          path: trivy-results.html
+          name: Trivy-fs-results
+          path: trivy-fs-results.html
           overwrite: true
+      # - name: SonarQube Scan
+      #   uses: sonarsource/sonarqube-scan-action@v2.3.0 # Ex: v2.1.0, See the latest version at https://github.com/marketplace/actions/official-sonarqube-scan
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      #     SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+          # Triggering SonarQube analysis as results of it are required by Quality Gate check.
       - name: SonarQube Scan
-        uses: sonarsource/sonarqube-scan-action@v2.3.0 # Ex: v2.1.0, See the latest version at https://github.com/marketplace/actions/official-sonarqube-scan
+        uses: sonarsource/sonarqube-scan-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+     # Check the Quality Gate status.
+      - name: SonarQube Quality Gate check
+        id: sonarqube-quality-gate-check
+        uses: sonarsource/sonarqube-quality-gate-action@master
+        # Force to fail step after specific time.
+        timeout-minutes: 5
+        env:
+         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+         SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }} #OPTIONAL
       
       - name: Build with Maven
         run: mvn -B package --file pom.xml
