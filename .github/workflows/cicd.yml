@@ -31,7 +31,7 @@ jobs:
         with:
           project: BoardGame
           path: .
-          format: xml
+          format: 'XML'
           out: reports
           args: >
             --scan ./ --disableYarnAudit --disableNodeAudit --failOnCVSS 7
