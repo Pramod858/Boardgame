@@ -44,18 +44,34 @@ jobs:
           name: Depcheck report
           path: ${{github.workspace}}/reports
           overwrite: true
+      # - name: Run Trivy vulnerability scanner in repo mode
+      #   uses: aquasecurity/trivy-action@0.20.0
+      #   with:
+      #     scan-type: 'fs'
+      #     ignore-unfixed: true
+      #     format: 'sarif'
+      #     output: 'trivy-results.sarif'
+      #     severity: 'CRITICAL'
+
+      # - name: Upload Trivy scan results to GitHub Security tab
+      #   uses: github/codeql-action/upload-sarif@v2
+      #   with:
+      #     sarif_file: 'trivy-results.sarif'
+
       - name: Run Trivy vulnerability scanner in repo mode
         uses: aquasecurity/trivy-action@0.20.0
         with:
           scan-type: 'fs'
           ignore-unfixed: true
-          format: 'sarif'
-          output: 'trivy-results.sarif'
+          format: 'table'
+          output: 'trivy-results.html'
           severity: 'CRITICAL'
 
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v2
+      - name: Upload Trivy Results
+        uses: actions/upload-artifact@v3
         with:
-          sarif_file: 'trivy-results.sarif'
+          name: Trivy-results
+          path: trivy-results.html
+          overwrite: true
       - name: Build with Maven
         run: mvn -B package --file pom.xml
