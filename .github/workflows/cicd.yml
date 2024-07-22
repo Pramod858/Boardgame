@@ -119,16 +119,16 @@ jobs:
       #   with:
       #     context: .
       #     push: true
-      #     tags: ${{ secrets.DOCKER_USERNAME }}/git-action-boardgame:latest
+      #     tags: ${{ secrets.DOCKERHUB_USERNAME }}/git-action-boardgame:latest
 
       - name: Build the Docker image
         run: |
-          docker build . --file Dockerfile --tag ${{ secrets.DOCKER_USERNAME }}/git-action-boardgame:latest
+          docker build . --file Dockerfile --tag ${{ secrets.DOCKERHUB_USERNAME }}/git-action-boardgame:latest
 
       - name: Trivy Docker Image Scan
         uses: aquasecurity/trivy-action@0.20.0
         with:
-          image-ref: ${{ secrets.DOCKER_USERNAME }}/git-action-boardgame:latest
+          image-ref: ${{ secrets.DOCKERHUB_USERNAME }}/git-action-boardgame:latest
           ignore-unfixed: true
           format: 'table'
           output: 'trivy-image-results.html'
