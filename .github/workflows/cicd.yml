@@ -11,8 +11,8 @@ jobs:
   build:
     runs-on: self-hosted
     steps:
-      - name: Adjust Permissions
-        run: sudo chmod -R a+rw /home/ubuntu/actions-runner/_work/Boardgame/Boardgame || true
+      # - name: Adjust Permissions
+      #   run: sudo chmod -R a+rw /home/ubuntu/actions-runner/_work/Boardgame/Boardgame || true
       - uses: actions/checkout@v4
         with:
           # Disabling shallow clones is recommended for improving the relevancy of reporting
@@ -140,3 +140,7 @@ jobs:
           name: Trivy-image-results
           path: trivy-image-results.html
           overwrite: true
+
+      - name: Push Docker image
+        run: |
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/git-action-boardgame:latest
