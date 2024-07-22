@@ -42,7 +42,7 @@ jobs:
             --scan ./ --disableYarnAudit --disableNodeAudit --failOnCVSS 7
             --enableRetired
       - name: Upload Test results
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v4
         with:
           name: Depcheck report
           path: ${{github.workspace}}/reports
@@ -71,10 +71,11 @@ jobs:
           severity: 'CRITICAL'
 
       - name: Upload Trivy Results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Trivy-fs-results
           path: trivy-fs-results.html
+          overwrite: true
       # - name: SonarQube Scan
       #   uses: sonarsource/sonarqube-scan-action@v2.3.0 # Ex: v2.1.0, See the latest version at https://github.com/marketplace/actions/official-sonarqube-scan
       #   env:
